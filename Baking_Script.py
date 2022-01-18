@@ -71,11 +71,47 @@ img.save()
 """
 
 if(metal):
-    nodes = mat.node_tree.nodes  
-    for n in nodes:
-        if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
-            print(n.inputs[4])
-            print(n.inputs[7])
+    metal_tex_nodes = []
+    metal_col_nodes = []
+    
+    for m_s in mats_slots:
+        mat = m_s.material
+        nodes = mat.node_tree.nodes  
+        for n in nodes:
+            #Find Principled BSDF and change metallic and roughness inputs
+            if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
+                    metal_socket = n.inputs[4]
+                    rough_socket = n.inputs[7]
+                    #Change image-texts for nodes that need it
+                    if(metal_socket.is_linked) and (rough_socket.is_linked):
+                        metal_out_socket = metal_socket.links[0].from_socket
+                        rough_out_socket = rough_socket.links[0].from_socket
+                        mat.node_tree.links.new(metal_socket, rough_out_socket)
+                        mat.node_tree.links.new(metal_out_socket, rough_socket)
+                        metal_tex_nodes.append([mat, metal_socket, metal_out_socket, rough_socket, rough_out_socket])
+                    #Change only color value for nodes that need it
+                    elif(not metal_socket.is_linked) and (not rough_socket.is_linked):
+                        aux = metal_socket.default_value
+                        metal_socket.default_value = rough_socket.default_value
+                        rough_socket.default_value = aux
+                        metal_col_nodes.append([metal_socket, rough_socket, metal_socket])
+                        
+    """                 
+   #Simple Roughness Bake with metallic values
+    bpy.ops.object.bake(type='ROUGHNESS')
+    img.filepath_raw = uri + name + "_metallic.png"
+    img.file_format = 'PNG'
+    img.save()
+    """
+    #Return all sockets to their old textures and colors
+    for m_n in metal_tex_nodes:
+        m_n[0].node_tree.links.new(m_n[1], m_n[2])
+        m_n[0].node_tree.links.new(m_n[3], m_n[4])
+    
+    for m_n in metal_col_nodes:
+        aux = m_n[1].default_value
+        m_n[1].default_value = m_n[2].default_value
+        m_n[2].default_value = aux        
 
 #Delete Nodes and Images
 i=0
