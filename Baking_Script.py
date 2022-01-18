@@ -24,8 +24,8 @@ SOFTWARE.
 
 import bpy
 
-name= "monaco"
-uri = "//"
+name= "_PROP_NAME_"
+uri = "//_OUTPUT_ROUTE_"
 metal = True
 
 #Get the image node that uses certain name
@@ -71,14 +71,20 @@ if(metal):
                         mat.node_tree.links.remove(metal_socket.links[0])
                         metal_texs.append([mat, metal_socket, metal_out_socket])                     
 
-#Simple Bakes
+#Abedo Bake
 bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'})
 img.filepath_raw = uri + name + "_albedo.png"
 img.file_format = 'PNG'
 img.save()
 
-if()
-"""
+#Reconnect metals if there were any
+if(metal):
+    for m_n in metal_texs:
+        m_n[0].node_tree.links.new(m_n[1], m_n[2])
+    for m_n in metal_vals:
+        m_n[0].default_value = m_n[1]
+        
+#Simple Bakes
 bpy.ops.object.bake(type='ROUGHNESS')
 img.filepath_raw = uri + name + "_roughness.png"
 img.file_format = 'PNG'
@@ -144,8 +150,6 @@ if(metal):
     for m_n in metal_mix_nodes:
         m_n[0].node_tree.links.remove(m_n[1])
         m_n[0].node_tree.links.new(m_n[2], m_n[3])
-                 
-"""
 
 #Delete Nodes and Images
 i=0
