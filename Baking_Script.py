@@ -52,13 +52,33 @@ for m_s in mats_slots:
     node.image = img
     mat.node_tree.nodes.active = node
 
-"""
+#Disconnect metals if there are any
+if(metal):
+    metal_texs = []
+    metal_vals = []
+    for m_s in mats_slots:
+        mat = m_s.material
+        nodes = mat.node_tree.nodes  
+        for n in nodes:
+            #Find Principled BSDF and change metallic inputs
+            if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
+                    metal_socket = n.inputs[4]
+                    if(metal_socket.default_value > 0):
+                        metal_vals.append([metal_socket, metal_socket.default_value])
+                        metal_socket.default_value = 0
+                    if(metal_socket.is_linked):
+                        metal_out_socket = metal_socket.links[0].from_socket 
+                        mat.node_tree.links.remove(metal_socket.links[0])
+                        metal_texs.append([mat, metal_socket, metal_out_socket])                     
+
 #Simple Bakes
 bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'})
 img.filepath_raw = uri + name + "_albedo.png"
 img.file_format = 'PNG'
 img.save()
 
+if()
+"""
 bpy.ops.object.bake(type='ROUGHNESS')
 img.filepath_raw = uri + name + "_roughness.png"
 img.file_format = 'PNG'
@@ -68,8 +88,8 @@ bpy.ops.object.bake(type='NORMAL')
 img.filepath_raw = uri + name + "_normal.png"
 img.file_format = 'PNG'
 img.save()
-"""
 
+#Settings for Metal Baking
 if(metal):
     metal_tex_nodes = []
     metal_col_nodes = []
@@ -83,7 +103,7 @@ if(metal):
             if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
                     metal_socket = n.inputs[4]
                     rough_socket = n.inputs[7]
-                    #Change image-texts for nodes that need it
+                    #Change image-tex for nodes that need it
                     if(metal_socket.is_linked) and (rough_socket.is_linked):
                         metal_out_socket = metal_socket.links[0].from_socket
                         rough_out_socket = rough_socket.links[0].from_socket
@@ -96,6 +116,7 @@ if(metal):
                         metal_socket.default_value = rough_socket.default_value
                         rough_socket.default_value = aux
                         metal_col_nodes.append([metal_socket, rough_socket, metal_socket])
+                    #Change mix color value adn tex for nodes that need it
                     elif(not metal_socket.is_linked) and (rough_socket.is_linked):
                         aux = metal_socket.default_value
                         rough_out_socket = rough_socket.links[0].from_socket
@@ -103,15 +124,14 @@ if(metal):
                         mat.node_tree.links.remove(rough_socket.links[0])
                         rough_socket.default_value = aux
                         metal_mix_nodes.append([mat, node_link, rough_socket, rough_out_socket])
-                        
-    """               
-   #Simple Roughness Bake with metallic values
+                   
+   #Simple Metallnes Bake with metallic values
     bpy.ops.object.bake(type='ROUGHNESS')
     img.filepath_raw = uri + name + "_metallic.png"
     img.file_format = 'PNG'
     img.save()
-    """
-    #Return all sockets to their old textures and colors
+    
+    #Return all sockets materials to old textures and colors
     for m_n in metal_tex_nodes:
         m_n[0].node_tree.links.new(m_n[1], m_n[2])
         m_n[0].node_tree.links.new(m_n[3], m_n[4])
@@ -125,6 +145,7 @@ if(metal):
         m_n[0].node_tree.links.remove(m_n[1])
         m_n[0].node_tree.links.new(m_n[2], m_n[3])
                  
+"""
 
 #Delete Nodes and Images
 i=0
