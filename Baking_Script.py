@@ -24,8 +24,8 @@ SOFTWARE.
 
 import bpy
 
-name= "monaco"
-uri = "//"
+name= "_PROP_NAME_"
+uri = "//_FOLDER_OUTPUT_NAME"
 metal = True
 
 #Get the image node that uses certain name
@@ -96,13 +96,13 @@ if(metal):
                         rough_socket.default_value = aux
                         metal_col_nodes.append([metal_socket, rough_socket, metal_socket])
                         
-    """                 
+                     
    #Simple Roughness Bake with metallic values
     bpy.ops.object.bake(type='ROUGHNESS')
     img.filepath_raw = uri + name + "_metallic.png"
     img.file_format = 'PNG'
     img.save()
-    """
+    
     #Return all sockets to their old textures and colors
     for m_n in metal_tex_nodes:
         m_n[0].node_tree.links.new(m_n[1], m_n[2])
