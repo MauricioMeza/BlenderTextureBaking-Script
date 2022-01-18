@@ -13,7 +13,7 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OFa ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -24,8 +24,9 @@ SOFTWARE.
 
 import bpy
 
-name= "__PROP_NAME__"
-uri = "//__BAKING_FINAL_FOLDER__/" + name + "/"
+name= "monaco"
+uri = "//"
+metal = True
 
 #Get the image node that uses certain name
 def checkNode(mat, name):
@@ -50,11 +51,8 @@ for m_s in mats_slots:
     bake_nodes.append(node)
     node.image = img
     mat.node_tree.nodes.active = node
-    
-    height = checkNode(mat, 'height')
-    ao = checkNode(mat, 'ao')
 
-
+"""
 #Simple Bakes
 bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'})
 img.filepath_raw = uri + name + "_albedo.png"
@@ -70,7 +68,14 @@ bpy.ops.object.bake(type='NORMAL')
 img.filepath_raw = uri + name + "_normal.png"
 img.file_format = 'PNG'
 img.save()
+"""
 
+if(metal):
+    nodes = mat.node_tree.nodes  
+    for n in nodes:
+        if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
+            print(n.inputs[4])
+            print(n.inputs[7])
 
 #Delete Nodes and Images
 i=0
