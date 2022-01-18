@@ -24,8 +24,8 @@ SOFTWARE.
 
 import bpy
 
-name= "_PROP_NAME_"
-uri = "//_FOLDER_OUTPUT_NAME"
+name= "monaco"
+uri = "//"
 metal = True
 
 #Get the image node that uses certain name
@@ -73,6 +73,7 @@ img.save()
 if(metal):
     metal_tex_nodes = []
     metal_col_nodes = []
+    metal_mix_nodes = []
     
     for m_s in mats_slots:
         mat = m_s.material
@@ -95,23 +96,35 @@ if(metal):
                         metal_socket.default_value = rough_socket.default_value
                         rough_socket.default_value = aux
                         metal_col_nodes.append([metal_socket, rough_socket, metal_socket])
+                    elif(not metal_socket.is_linked) and (rough_socket.is_linked):
+                        aux = metal_socket.default_value
+                        rough_out_socket = rough_socket.links[0].from_socket
+                        node_link = mat.node_tree.links.new(metal_socket, rough_out_socket)
+                        mat.node_tree.links.remove(rough_socket.links[0])
+                        rough_socket.default_value = aux
+                        metal_mix_nodes.append([mat, node_link, rough_socket, rough_out_socket])
                         
-                     
+    """               
    #Simple Roughness Bake with metallic values
     bpy.ops.object.bake(type='ROUGHNESS')
     img.filepath_raw = uri + name + "_metallic.png"
     img.file_format = 'PNG'
     img.save()
-    
+    """
     #Return all sockets to their old textures and colors
     for m_n in metal_tex_nodes:
         m_n[0].node_tree.links.new(m_n[1], m_n[2])
         m_n[0].node_tree.links.new(m_n[3], m_n[4])
-    
+
     for m_n in metal_col_nodes:
         aux = m_n[1].default_value
         m_n[1].default_value = m_n[2].default_value
-        m_n[2].default_value = aux        
+        m_n[2].default_value = aux 
+        
+    for m_n in metal_mix_nodes:
+        m_n[0].node_tree.links.remove(m_n[1])
+        m_n[0].node_tree.links.new(m_n[2], m_n[3])
+                 
 
 #Delete Nodes and Images
 i=0
@@ -121,7 +134,4 @@ for m_s in mats_slots:
     mat.node_tree.nodes.remove(n)
     i+=1
     
-bpy.data.images.remove(img)
-
-  
-    
+bpy.data.images.remove(img) 
