@@ -24,9 +24,16 @@ SOFTWARE.
 
 import bpy
 
-name= "_PROP_NAME_"
-uri = "//_OUTPUT_ROUTE_"
+#<-------------------------------------------------------->
+#----->THIS ARE THE INITIAL PARAMETERS OF THE SCRIPT<------
+#--the name of your asset/prop
+name= "PROP_NAME"
+#--if you want maps to be saved in the same folder just leave it as "//"
+uri = "//"
+#--if you dont want Metallness or AO change this to False
 metal = True
+ao = True
+#<-------------------------------------------------------->
 
 #Get the image node that uses certain name
 def checkNode(mat, name):
@@ -94,6 +101,13 @@ bpy.ops.object.bake(type='NORMAL')
 img.filepath_raw = uri + name + "_normal.png"
 img.file_format = 'PNG'
 img.save()
+
+if(ao):
+    bpy.ops.object.bake(type='AO')
+    img.filepath_raw = uri + name + "_ao.png"
+    img.file_format = 'PNG'
+    img.save()
+
 
 #Settings for Metal Baking
 if(metal):
