@@ -33,25 +33,20 @@ uri = "//"
 #--if you dont want Metallness or AO change this to False
 metal = True
 ao = True
+#--if you want to create a new object with all baked textures turn this to true
+duplicate = False
 #<-------------------------------------------------------->
 
-#Get the image node that uses certain name
-def checkNode(mat, name):
-    nodes = mat.node_tree.nodes  
-    for n in nodes:
-        if(n.bl_idname == 'ShaderNodeTexImage') and ("_" + name in n.image.name):
-            print(name + " image found as: " + n.image.name)
-            return n  
 
-
-#Get Object, MaterialSlots and create a new Image for baking
+#-----INITIAL SETTINGS----
+#--Get Object, MaterialSlots and create a new Image for baking
 obj = bpy.context.selected_objects[0]
 mats_slots = obj.material_slots
 bpy.ops.image.new(name='Bake', width=2048, height=2048, color=(0.0, 0.0, 0.0, 1.0), alpha=True, generated_type='BLANK', float=False, use_stereo_3d=False, tiled=False)
 img = bpy.data.images['Bake']
 bake_nodes = []
 
-#Create new img shader and assign the baking img
+#--Create new img shader and assign the baking img
 for m_s in mats_slots:
     mat = m_s.material
     node = mat.node_tree.nodes.new(type='ShaderNodeTexImage')
@@ -59,7 +54,9 @@ for m_s in mats_slots:
     node.image = img
     mat.node_tree.nodes.active = node
 
-#Disconnect metals if there are any
+
+#-----ALBEDO BAKING WITOUTH METALLNESS----
+#--Disconnect metals if there are any
 if(metal):
     metal_texs = []
     metal_vals = []
@@ -78,20 +75,22 @@ if(metal):
                         mat.node_tree.links.remove(metal_socket.links[0])
                         metal_texs.append([mat, metal_socket, metal_out_socket])                     
 
-#Abedo Bake
+#--Albedo Bake
 bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'})
 img.filepath_raw = uri + name + "_albedo.png"
 img.file_format = 'PNG'
 img.save()
 
-#Reconnect metals if there were any
+#--Reconnect metals if there were any
 if(metal):
     for m_n in metal_texs:
         m_n[0].node_tree.links.new(m_n[1], m_n[2])
     for m_n in metal_vals:
         m_n[0].default_value = m_n[1]
-        
-#Simple Bakes
+   
+
+#-----ROUGHNESS, NORMAL AND AO BAKING----     
+#--Simple Bakes
 bpy.ops.object.bake(type='ROUGHNESS')
 img.filepath_raw = uri + name + "_roughness.png"
 img.file_format = 'PNG'
@@ -109,7 +108,8 @@ if(ao):
     img.save()
 
 
-#Settings for Metal Baking
+#-----METALNESS BAKING---- 
+#--Settings for Metal Baking
 if(metal):
     metal_tex_nodes = []
     metal_col_nodes = []
@@ -145,13 +145,13 @@ if(metal):
                         rough_socket.default_value = aux
                         metal_mix_nodes.append([mat, node_link, rough_socket, rough_out_socket])
                    
-   #Simple Metallnes Bake with metallic values
+    #-Simple Metallnes Bake with metallic values
     bpy.ops.object.bake(type='ROUGHNESS')
     img.filepath_raw = uri + name + "_metallic.png"
     img.file_format = 'PNG'
     img.save()
     
-    #Return all sockets materials to old textures and colors
+    #-Return all sockets materials to old textures and colors
     for m_n in metal_tex_nodes:
         m_n[0].node_tree.links.new(m_n[1], m_n[2])
         m_n[0].node_tree.links.new(m_n[3], m_n[4])
@@ -165,12 +165,24 @@ if(metal):
         m_n[0].node_tree.links.remove(m_n[1])
         m_n[0].node_tree.links.new(m_n[2], m_n[3])
 
-#Delete Nodes and Images
+
+#-----FINAL SETTINGS---- 
+#--Delete Nodes and Images
 i=0
 for m_s in mats_slots:
     mat = m_s.material
     n = bake_nodes[i]
     mat.node_tree.nodes.remove(n)
     i+=1
-    
 bpy.data.images.remove(img) 
+
+
+#-----DUPLICATE THE OBJECT WITH THE BAKED TEXTURES----
+if(duplicate):
+    dup_obj = obj.duplicate()
+    #-remove all materials
+    dup_mat_slots = dup_obj.material_slots
+    for mat_slot in dup_mat_slots:
+        dup_obj.active_material_index = 0
+        dup_obj.material_slot_remove()
+
