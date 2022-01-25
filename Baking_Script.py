@@ -27,7 +27,7 @@ import bpy
 #<-------------------------------------------------------->
 #----->THIS ARE THE INITIAL PARAMETERS OF THE SCRIPT<------
 #--the name of your asset/prop
-name= "Santander"
+name= "_PROP_NAME"
 #--if you want maps to be saved in the same folder just leave it as "//"
 uri = "//"
 #--if you dont want Metallness or AO change this to False
@@ -44,7 +44,8 @@ bpy.context.scene.render.engine = 'CYCLES'
 #--Get Object, MaterialSlots and create a new Image for baking
 obj = bpy.context.selected_objects[0]
 mats_slots = obj.material_slots
-"""
+
+
 bpy.ops.image.new(name='Bake', width=512, height=512, color=(0.0, 0.0, 0.0, 1.0), alpha=True, generated_type='BLANK', float=False, use_stereo_3d=False, tiled=False)
 img = bpy.data.images['Bake']
 bake_nodes = []
@@ -178,7 +179,7 @@ for m_s in mats_slots:
     mat.node_tree.nodes.remove(n)
     i+=1
 bpy.data.images.remove(img) 
-"""
+
 
 #-----DUPLICATE THE OBJECT WITH THE BAKED TEXTURES----
 if(duplicate):
@@ -234,5 +235,11 @@ if(duplicate):
                 pbr_mat.node_tree.links.new(mtl_node_out, metal_socket)   
                 
     obj.data.materials.append(pbr_mat)
-    obj.location[0] = 2
-
+    obj.location[0] = 1
+    
+"""
+BUGS AND TODO:
+- Check for Empty Material_Slots
+- MetalTex + RoughnessVal in Metal Baking Process
+- Normal in Duplication
+"""
