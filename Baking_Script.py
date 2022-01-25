@@ -27,22 +27,25 @@ import bpy
 #<-------------------------------------------------------->
 #----->THIS ARE THE INITIAL PARAMETERS OF THE SCRIPT<------
 #--the name of your asset/prop
-name= "PROP_NAME"
+name= "Santander"
 #--if you want maps to be saved in the same folder just leave it as "//"
 uri = "//"
 #--if you dont want Metallness or AO change this to False
 metal = True
 ao = True
 #--if you want to create a new object with all baked textures turn this to true
-duplicate = False
+duplicate = True
 #<-------------------------------------------------------->
+
+bpy.context.scene.render.engine = 'CYCLES'
 
 
 #-----INITIAL SETTINGS----
 #--Get Object, MaterialSlots and create a new Image for baking
 obj = bpy.context.selected_objects[0]
 mats_slots = obj.material_slots
-bpy.ops.image.new(name='Bake', width=2048, height=2048, color=(0.0, 0.0, 0.0, 1.0), alpha=True, generated_type='BLANK', float=False, use_stereo_3d=False, tiled=False)
+"""
+bpy.ops.image.new(name='Bake', width=512, height=512, color=(0.0, 0.0, 0.0, 1.0), alpha=True, generated_type='BLANK', float=False, use_stereo_3d=False, tiled=False)
 img = bpy.data.images['Bake']
 bake_nodes = []
 
@@ -175,14 +178,21 @@ for m_s in mats_slots:
     mat.node_tree.nodes.remove(n)
     i+=1
 bpy.data.images.remove(img) 
-
+"""
 
 #-----DUPLICATE THE OBJECT WITH THE BAKED TEXTURES----
 if(duplicate):
-    dup_obj = obj.duplicate()
+    #-create new object, rename it and move it
+    dup_obj = obj.copy()
+    dup_obj.data = obj.data.copy()
+    bpy.context.collection.objects.link(dup_obj)
+    obj.name = name+" PBR"
+    dup_obj.name = name
     #-remove all materials
     dup_mat_slots = dup_obj.material_slots
     for mat_slot in dup_mat_slots:
         dup_obj.active_material_index = 0
-        dup_obj.material_slot_remove()
+        bpy.ops.object.material_slot_remove()
+
+    
 
