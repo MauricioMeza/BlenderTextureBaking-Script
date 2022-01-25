@@ -188,28 +188,51 @@ if(duplicate):
     bpy.context.collection.objects.link(dup_obj)
     obj.name = name+" PBR"
     dup_obj.name = name
+    
     #-remove all materials
     dup_mat_slots = dup_obj.material_slots
     for mat_slot in dup_mat_slots:
         dup_obj.active_material_index = 0
         bpy.ops.object.material_slot_remove()
      
-    #-create new material and load image
+    #-create new material
     pbr_mat = bpy.data.materials.new(name=name+" PBR")
     pbr_mat.use_nodes = True  
+    
+    
+    #-load images
     alb_node = pbr_mat.node_tree.nodes.new(type='ShaderNodeTexImage')
     bpy.ops.image.open(filepath=uri+name+"_albedo.png")
     bpy.data.images[name+"_albedo.png"].pack()
-    alb_node.image = bpy.data.images[name+"_albedo.png"] 
+    alb_node.image = bpy.data.images[name+"_albedo.png"]
     alb_node_out = alb_node.outputs[0]
     
+    rgh_node = pbr_mat.node_tree.nodes.new(type='ShaderNodeTexImage')
+    bpy.ops.image.open(filepath=uri+name+"_roughness.png")
+    bpy.data.images[name+"_roughness.png"].pack()
+    rgh_node.image = bpy.data.images[name+"_roughness.png"]
+    rgh_node_out = rgh_node.outputs[0]
+    
+    if(metal):
+        mtl_node = pbr_mat.node_tree.nodes.new(type='ShaderNodeTexImage')    
+        bpy.ops.image.open(filepath=uri+name+"_metallic.png")
+        bpy.data.images[name+"_metallic.png"].pack()
+        mtl_node.image = bpy.data.images[name+"_metallic.png"]
+        mtl_node_out = mtl_node.outputs[0]
+        
+        
+    #find Principled BSDF and link images to bsdf
     nodes = pbr_mat.node_tree.nodes  
     for n in nodes:
-        #find Principled BSDF and change connect images
         if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
             albdo_socket = n.inputs[0]
             pbr_mat.node_tree.links.new(alb_node_out, albdo_socket)
+            rough_socket = n.inputs[7]
+            pbr_mat.node_tree.links.new(rgh_node_out, rough_socket)
+            if(metal):
+                metal_socket = n.inputs[4]
+                pbr_mat.node_tree.links.new(mtl_node_out, metal_socket)   
                 
     obj.data.materials.append(pbr_mat)
-    
+    obj.location[0] = 2
 
