@@ -193,6 +193,23 @@ if(duplicate):
     for mat_slot in dup_mat_slots:
         dup_obj.active_material_index = 0
         bpy.ops.object.material_slot_remove()
-
+     
+    #-create new material and load image
+    pbr_mat = bpy.data.materials.new(name=name+" PBR")
+    pbr_mat.use_nodes = True  
+    alb_node = pbr_mat.node_tree.nodes.new(type='ShaderNodeTexImage')
+    bpy.ops.image.open(filepath=uri+name+"_albedo.png")
+    bpy.data.images[name+"_albedo.png"].pack()
+    alb_node.image = bpy.data.images[name+"_albedo.png"] 
+    alb_node_out = alb_node.outputs[0]
+    
+    nodes = pbr_mat.node_tree.nodes  
+    for n in nodes:
+        #find Principled BSDF and change connect images
+        if(n.bl_idname == 'ShaderNodeBsdfPrincipled'):
+            albdo_socket = n.inputs[0]
+            pbr_mat.node_tree.links.new(alb_node_out, albdo_socket)
+                
+    obj.data.materials.append(pbr_mat)
     
 
